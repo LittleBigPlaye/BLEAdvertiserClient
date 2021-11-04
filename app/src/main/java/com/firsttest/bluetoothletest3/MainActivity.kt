@@ -143,7 +143,7 @@ class MainActivity : AppCompatActivity() {
 
             //filters found devices by the given criteria
             //only devices with the given uuid - devices that run this application will be discovered
-            var filter = ScanFilter.Builder().setServiceUuid(pUuid).build()
+            var filter = ScanFilter.Builder().setServiceData(pUuid!!, null).build()
             var filters :MutableList<ScanFilter> = mutableListOf()
             filters.add(filter)
 
@@ -165,6 +165,22 @@ class MainActivity : AppCompatActivity() {
     private val scanCallback = object: ScanCallback() {
         //called whenever a new matching ble device was found
         override fun onScanResult(callbackType: Int, result: ScanResult) {
+            var resultUuid : String? = null;
+            try{
+
+                var map = result.scanRecord?.serviceData
+                var entry = map?.entries?.iterator()?.next()
+                resultUuid = entry?.key.toString();
+            } catch (e: Exception) {
+                return;
+            }
+
+            //check if the found result has a service data uuid mask set, if not don't add it to the list
+            if(resultUuid == null || pUuid.toString().lowercase() != resultUuid.lowercase()) {
+                return;
+            }
+            Log.i("resultUuid", "${resultUuid?:"Unknown"}");
+
             val indexQuery = scanResults.indexOfFirst { it.device.address == result.device.address }
 
             //check if the list already contains an item with the found address
@@ -207,9 +223,11 @@ class MainActivity : AppCompatActivity() {
         //data can be used to broadcast information but the pUuid seems to be changed on older devices
         var advertiseData = AdvertiseData.Builder()
             .setIncludeDeviceName(false)
-            .addServiceUuid(pUuid)
-            //.addServiceData(pUuid, dataString.toString().toByteArray(Charset.forName("UTF-8")))
+            //.addServiceUuid(pUuid)
+            .addServiceData(pUuid, dataString.toString().toByteArray(Charset.forName("UTF-8")))
             .build()
+
+        Log.i("pUuid", pUuid.toString())
 
         //starts the bluetooth advertiser
         bleAdvertiser.startAdvertising(settings, advertiseData, advertisingCallback)

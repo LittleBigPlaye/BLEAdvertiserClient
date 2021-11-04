@@ -51,6 +51,7 @@ class ScanResultAdapter  (
 
                 dataString =
                     entry?.let { String(it.value, Charset.forName("UTF-8")) }
+                //dataString = entry?.key.toString();
             } catch (e: Exception) {
 
             }
@@ -61,7 +62,7 @@ class ScanResultAdapter  (
             deviceName.text = result.device.name ?: "Unnamed"
             macAddress.text = result.device.address
             signalStrength.text = "${result.rssi} dBm"
-            data.text = dataString;
+            data.text = "${dataString ?: "Unknown"}";
 
             view.setOnClickListener{onClickListener.invoke(result)}
         }
